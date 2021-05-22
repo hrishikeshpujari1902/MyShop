@@ -1,34 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shopapp/providers/product.dart';
+import 'package:shopapp/screens/product_detail_screen.dart';
 
 class ProductItem extends StatelessWidget {
-  final String id;
-  final String title;
-  final String imageUrl;
-
-  ProductItem({
-    Key key,
-    this.id,
-    this.title,
-    this.imageUrl,
-  }) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return GridTile(
-      child: Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-      ),
-      footer: GridTileBar(
-        leading: IconButton(
-          icon: Icon(Icons.favorite),
-          onPressed: () {},
+    Product product = Provider.of<Product>(context, listen: false);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: GridTile(
+        child: GestureDetector(
+          onTap: () {
+            Navigator.of(context).pushNamed(
+              ProductDetailScreen.routeName,
+              arguments: product.id,
+            );
+          },
+          child: Image.network(
+            product.imageUrl,
+            fit: BoxFit.cover,
+          ),
         ),
-        trailing: IconButton(icon: Icon(Icons.shopping_cart), onPressed: () {}),
-        title: Text(
-          title,
-          textAlign: TextAlign.center,
+        footer: GridTileBar(
+          leading: Consumer<Product>(
+            builder: (context, product, child) {
+              return IconButton(
+                icon: Icon(product.isfavourite
+                    ? Icons.favorite
+                    : Icons.favorite_border_outlined),
+                color: Theme.of(context).accentColor,
+                onPressed: () {
+                  product.favouriteToggle();
+                },
+              );
+            },
+          ),
+          trailing: IconButton(
+              icon: Icon(Icons.shopping_cart),
+              color: Theme.of(context).accentColor,
+              onPressed: () {}),
+          title: Text(
+            product.title,
+            textAlign: TextAlign.center,
+          ),
+          backgroundColor: Colors.black87,
         ),
-        backgroundColor: Colors.black45,
       ),
     );
   }
