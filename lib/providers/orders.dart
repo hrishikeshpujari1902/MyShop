@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import './cart.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class OrderItem {
   final String id;
@@ -22,15 +24,67 @@ class Orders with ChangeNotifier {
     return [..._orders];
   }
 
-  void addOrder(List<CartItem> cartProducts, double total) {
-    _orders.insert(
-      0,
-      OrderItem(
-          id: DateTime.now().toString(),
-          amount: total,
-          dateTime: DateTime.now(),
-          products: cartProducts),
-    );
-    notifyListeners();
+  Future<void> fetchOrders() {
+    List<OrderItem> loadedOrders = [];
+    final url = Uri.parse(
+        'https://myshop-a6023-default-rtdb.firebaseio.com/orders.json');
+    return http.get(url).then((response) {
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      if (extractedData != null) {
+        extractedData.forEach((key, value) {
+          loadedOrders.insert(
+              0,
+              OrderItem(
+                id: key,
+                amount: value['amount'],
+                dateTime: DateTime.parse(value['dateTime']),
+                products: (value['products'] as List<dynamic>)
+                    .map((item) => CartItem(
+                          id: item['id'],
+                          title: item['title'],
+                          price: item['price'],
+                          quantity: item['quantity'],
+                        ))
+                    .toList(),
+              ));
+        });
+      }
+      _orders = loadedOrders;
+      notifyListeners();
+    });
+  }
+
+  Future<void> addOrder(List<CartItem> cartProducts, double total) {
+    final url = Uri.parse(
+        'https://myshop-a6023-default-rtdb.firebaseio.com/orders.json');
+    final timeStamp = DateTime.now();
+
+    return http
+        .post(url,
+            body: json.encode({
+              'amount': total,
+              'dateTime': timeStamp.toIso8601String(),
+              'products': cartProducts
+                  .map((cp) => {
+                        'id': cp.id,
+                        'title': cp.title,
+                        'quantity': cp.quantity,
+                        'price': cp.price
+                      })
+                  .toList(),
+            }))
+        .then((response) {
+      _orders.insert(
+        0,
+        OrderItem(
+            id: json.decode(response.body)['name'],
+            amount: total,
+            dateTime: timeStamp,
+            products: cartProducts),
+      );
+      notifyListeners();
+    }).catchError((error) {
+      throw error;
+    });
   }
 }

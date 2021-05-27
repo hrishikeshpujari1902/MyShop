@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Product with ChangeNotifier {
   final String id;
@@ -16,12 +18,25 @@ class Product with ChangeNotifier {
     @required this.imageUrl,
     this.isfavourite = false,
   });
-  void favouriteToggle() {
-    if (!isfavourite) {
-      isfavourite = true;
-    } else {
-      isfavourite = false;
-    }
+  Future<void> favouriteToggle() {
+    final oldStatus = isfavourite;
+    isfavourite = !isfavourite;
     notifyListeners();
+    final url = Uri.parse(
+        'https://myshop-a6023-default-rtdb.firebaseio.com/products/$id.json');
+    return http
+        .patch(url,
+            body: json.encode({
+              'isfavourite': isfavourite,
+            }))
+        .then((response) {
+      if (response.statusCode >= 400) {
+        isfavourite = oldStatus;
+        notifyListeners();
+      }
+    }).catchError((_) {
+      isfavourite = oldStatus;
+      notifyListeners();
+    });
   }
 }
