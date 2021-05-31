@@ -18,17 +18,17 @@ class Product with ChangeNotifier {
     @required this.imageUrl,
     this.isfavourite = false,
   });
-  Future<void> favouriteToggle() {
+  Future<void> favouriteToggle(String authToken, String userId) {
     final oldStatus = isfavourite;
     isfavourite = !isfavourite;
     notifyListeners();
     final url = Uri.parse(
-        'https://myshop-a6023-default-rtdb.firebaseio.com/products/$id.json');
+        'https://myshop-a6023-default-rtdb.firebaseio.com/userfavourites/$userId/$id.json?auth=$authToken');
     return http
-        .patch(url,
-            body: json.encode({
-              'isfavourite': isfavourite,
-            }))
+        .put(url,
+            body: json.encode(
+              isfavourite,
+            ))
         .then((response) {
       if (response.statusCode >= 400) {
         isfavourite = oldStatus;
