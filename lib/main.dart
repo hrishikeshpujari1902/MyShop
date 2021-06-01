@@ -11,6 +11,7 @@ import './screens/orders_screen.dart';
 import './screens/user_product_screen.dart';
 import './providers/cart.dart';
 import './screens/cart_screen.dart';
+import './helpers/custom_route.dart';
 
 import './screens/product_detail_screen.dart';
 //import './screens/products_overview_screen.dart';
@@ -56,10 +57,13 @@ class MyApp extends StatelessWidget {
           builder: (context, auth, child) => MaterialApp(
             title: 'MyShop',
             theme: ThemeData(
-              primarySwatch: Colors.purple,
-              accentColor: Colors.deepOrange,
-              fontFamily: 'Lato',
-            ),
+                primarySwatch: Colors.purple,
+                accentColor: Colors.deepOrange,
+                fontFamily: 'Lato',
+                pageTransitionsTheme: PageTransitionsTheme(builders: {
+                  TargetPlatform.android: CustomPageTransitionBuilder(),
+                  TargetPlatform.iOS: CustomPageTransitionBuilder(),
+                })),
             home: auth.isAuth
                 ? ProductsOverviewScreen()
                 : FutureBuilder(
